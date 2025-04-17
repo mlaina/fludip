@@ -24,23 +24,36 @@ const config: Config = {
           foreground: 'hsl(var(--popover-foreground))'
         },
         primary: {
-          DEFAULT: '#6C6C6C',
-          foreground: 'hsl(var(--primary-foreground))'
+          DEFAULT: 'hsl(var(--primary))',
+          foreground: 'hsl(var(--primary-foreground))',
+          // Escala de azules que complementan el verde
+          50: '#F0F7FF',
+          100: '#E0EFFF',
+          200: '#C0DFFF',
+          300: '#90C7FF',
+          400: '#5AADFF',
+          500: '#3B93FF',
+          600: '#2979E6',
+          700: '#1D5DBF',
+          800: '#164899',
+          900: '#0F3573',
+          950: '#0A2249'
         },
         secondary: {
-          DEFAULT: '#B4187F',
-          50: '#FDF2F9', // Rosa casi blanco
-          100: '#F8D7ED', // Rosa muy claro (ya definido)
-          200: '#F3B0DB', // Rosa claro
-          300: '#E985C4', // Rosa medio claro
-          400: '#D54DA4', // Rosa medio
-          500: '#B4187F', // Rosa fuerte/magenta (color base ya definido)
-          600: '#9A1470', // Magenta oscuro
-          700: '#711B53', // Púrpura rojizo (ya definido)
-          800: '#581542', // Púrpura oscuro
-          900: '#3F1030', // Púrpura muy oscuro
-          950: '#2B0A21', // Casi negro con tinte púrpura
-          foreground: 'hsl(var(--secondary-foreground))'
+          DEFAULT: 'hsl(var(--secondary))',
+          foreground: 'hsl(var(--secondary-foreground))',
+          // Escala de verdes basada en #BBD8B3
+          50: '#F5F9F4',
+          100: '#E9F3E6',
+          200: '#D8E9D3',
+          300: '#C8E0C0',
+          400: '#BBD8B3', // Color base proporcionado
+          500: '#A3C99A',
+          600: '#8BB981',
+          700: '#73A868',
+          800: '#5D8B53',
+          900: '#4A6F42',
+          950: '#2A3F26'
         },
         muted: {
           DEFAULT: 'hsl(var(--muted))',
