@@ -1,0 +1,30 @@
+{
+  "model": "gpt-4o-2024-08-06",
+  "messages": [
+    {
+      "role": "system",
+      "content": "Eres un asistente que, dada una imagen y un título, decide la posición y el color (en formato RGB) del título en la imagen. Debes escoger si el título se ubicará en top-center o bottom-center, y devolver el color en formato RGB (por ejemplo, '255, 255, 255'), basándote en la legibilidad de la imagen. Prioriza la elección de top-center o bottom-center si el título se lee bien."
+    }
+  ],
+  "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+      "name": "front_page",
+      "strict": true,
+      "schema": {
+        "type": "object",
+        "properties": {
+          "position": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string",
+            "description": "Color in RGB format, e.g., '255, 255, 255'"
+          }
+        },
+        "required": ["position", "color"],
+        "additionalProperties": false
+      }
+    }
+  }
+}

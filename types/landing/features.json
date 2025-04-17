@@ -1,0 +1,95 @@
+[
+  [
+    {
+      "title": "personalization_total",
+      "features": [
+        "define_protagonists",
+        "upload_images",
+        "write_story_concept",
+        "regenerate_edit_parts"
+      ]
+    },
+    {
+      "title": "instant_generation",
+      "description": "instant_generation_description"
+    }
+  ],
+  [
+    {
+      "title": "image_quality",
+      "description": "image_quality_description"
+    },
+    {
+      "title": "unique_stories",
+      "description": "unique_stories_description"
+    }
+  ],
+  [
+    {
+      "title": "stories_for_occasions",
+      "features": [
+        "special_occasions",
+        "unique_gift_opportunity"
+      ]
+    },
+    {
+      "title": "accessible_devices",
+      "description": "accessible_devices_description"
+    }
+  ],
+  [
+    {
+      "title": "export_stories",
+      "description": "export_stories_description"
+    },
+    {
+      "title": "creation_control",
+      "description": "creation_control_description"
+    }
+  ],
+  [
+    {
+      "title": "edit_texts_images_covers",
+      "description": "edit_texts_images_covers_description"
+    },
+    {
+      "title": "prompt_assistant",
+      "description": "prompt_assistant_description"
+    }
+  ],
+  [
+    {
+      "title": "voice_cloning",
+      "comming": true,
+      "description": "voice_cloning_description"
+    },
+    {
+      "title": "story_narration",
+      "comming": true,
+      "description": "story_narration_description"
+    }
+  ],
+  [
+    {
+      "title": "share_stories",
+      "comming": true,
+      "description": "share_stories_description"
+    },
+    {
+      "title": "print_order",
+      "comming": true,
+      "description": "print_order_description"
+    }
+  ],
+  [
+    {
+      "title": "recommendations",
+      "comming": true,
+      "description": "recommendations_description"
+    },
+    {
+      "title": "bilingual_stories",
+      "description": "bilingual_stories_description"
+    }
+  ]
+]

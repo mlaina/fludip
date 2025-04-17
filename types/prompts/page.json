@@ -1,0 +1,23 @@
+{
+  "model": "gpt-4o-2024-08-06",
+  "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+      "name": "story_pages",
+      "strict": true,
+      "schema": {
+        "type": "object",
+        "properties": {
+          "image_description": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": ["image_description", "text"],
+        "additionalProperties": false
+      }
+    }
+  }
+}

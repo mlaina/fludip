@@ -1,0 +1,67 @@
+{
+  "model": "gpt-4.1",
+  "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+      "name": "index_format",
+      "strict": true,
+      "schema": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "frontpage_description": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "main_elements": {
+            "type": "string"
+          },
+          "characters": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                }
+              },
+              "required": ["name", "description"],
+              "additionalProperties": false
+            }
+          },
+          "index": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "page": {
+                  "type": "integer"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "characters_appear": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": ["page", "text", "characters_appear"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["title", "main_elements", "characters", "frontpage_description", "index"],
+        "additionalProperties": false
+      }
+    }
+  }
+}
