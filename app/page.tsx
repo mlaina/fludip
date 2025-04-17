@@ -47,8 +47,8 @@ export default function Home() {
                 },
                 body: JSON.stringify({
                     action: "start",
-                    userName: userName,
-                    learningLanguage: learningLanguage,
+                    name: userName,
+                    lng_target: learningLanguage,
                 }),
             })
 
@@ -138,11 +138,7 @@ export default function Home() {
             setIsLoading(false)
         }
     }
-
-    // Desplazamiento automático al último mensaje
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-    }, [messages])
+    
 
     return (
         <div className="relative min-h-screen overflow-hidden bg-white">
