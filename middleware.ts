@@ -1,7 +1,7 @@
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 import { NextResponse } from 'next/server'
 
-const publicRoutes = ['/', '/legal', '/s/', '/api/webhook', '/image', '/validation', '/auth/callback', '/auth/confirm', '/preview/*', '/my-story/*']
+const publicRoutes = ['/', '/legal', '/s/', '/api/webhook', '/api/lisa', '/image', '/validation', '/auth/callback', '/auth/confirm', '/preview/*', '/my-story/*']
 
 // Rutas permitidas para usuarios con plan WAITING
 const waitingAllowedRoutes = ['/coming-soon', '/story-view/']
