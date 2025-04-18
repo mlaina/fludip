@@ -1,98 +1,37 @@
 "use client"
 
 import type React from "react"
-import { Waves, MessageCircle, Send, Globe } from "lucide-react"
+import { Waves, MessageCircle, ArrowLeft, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import LanguageSelector from "@/components/LanguageSelector"
 import { useTranslations } from "next-intl"
-import { useState, useRef, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
-type Message = {
-    id: string
-    role: "user" | "assistant"
-    content: string
+type ResponseData = {
+    large: string
+    shorts: string[]
 }
 
 export default function Home() {
     const t = useTranslations()
-    const [chatStarted, setChatStarted] = useState(false)
-    const [messages, setMessages] = useState<Message[]>([])
-    const [input, setInput] = useState("")
-    const [isLoading, setIsLoading] = useState(false)
+    const [formSubmitted, setFormSubmitted] = useState(false)
     const [userName, setUserName] = useState("")
-    const [learningLanguage, setLearningLanguage] = useState("")
-    const messagesEndRef = useRef<HTMLDivElement>(null)
+    const [userThought, setUserThought] = useState("")
+    const [isLoading, setIsLoading] = useState(false)
+    const [responses, setResponses] = useState<ResponseData[]>([])
+    const [currentResponseIndex, setCurrentResponseIndex] = useState(0)
 
-    // Función para generar un ID único
-    const generateId = () => Math.random().toString(36).substring(2, 10)
-
-    // Función para iniciar el chat
-    const startChat = async () => {
-        if (!userName.trim() || !learningLanguage) {
-            return
-        }
-
-        setChatStarted(true)
-        setIsLoading(true)
-
-        try {
-            const response = await fetch("/api/lisa", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    action: "start",
-                    name: userName,
-                    lng_target: learningLanguage,
-                }),
-            })
-
-            if (!response.ok) {
-                throw new Error("Error al iniciar la conversación")
-            }
-
-            const data = await response.json()
-
-            setMessages([
-                {
-                    id: generateId(),
-                    role: "assistant",
-                    content: data.response || "¡Hola! ¿En qué puedo ayudarte hoy?",
-                },
-            ])
-        } catch (error) {
-            console.error("Error:", error)
-            setMessages([
-                {
-                    id: generateId(),
-                    role: "assistant",
-                    content: "Lo siento, ha ocurrido un error al iniciar la conversación. Por favor, inténtalo de nuevo.",
-                },
-            ])
-        } finally {
-            setIsLoading(false)
-        }
-    }
-
-    // Función para enviar un mensaje
-    const sendMessage = async (e: React.FormEvent) => {
+    // Función para enviar el pensamiento del usuario
+    const submitThought = async (e: React.FormEvent) => {
         e.preventDefault()
 
-        if (!input.trim() || isLoading) return
+        if (!userName.trim() || !userThought.trim() || isLoading) return
 
-        const userMessage = {
-            id: generateId(),
-            role: "user" as const,
-            content: input,
-        }
-
-        setMessages((prev) => [...prev, userMessage])
-        setInput("")
         setIsLoading(true)
 
         try {
@@ -102,43 +41,69 @@ export default function Home() {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    action: "message",
-                    message: input,
-                    history: messages,
-                    userName: userName,
-                    learningLanguage: learningLanguage,
+                    name: userName,
+                    text: userThought,
                 }),
             })
 
             if (!response.ok) {
-                throw new Error("Error al enviar el mensaje")
+                throw new Error("Error al procesar la solicitud")
             }
 
-            const data = await response.json()
-
-            setMessages((prev) => [
-                ...prev,
-                {
-                    id: generateId(),
-                    role: "assistant",
-                    content: data.response || data.message || "Lo siento, no pude procesar tu mensaje.",
-                },
-            ])
+            const data = (await response.json()) as ResponseData
+            setResponses([data])
+            setCurrentResponseIndex(0)
+            setFormSubmitted(true)
         } catch (error) {
             console.error("Error:", error)
-            setMessages((prev) => [
-                ...prev,
-                {
-                    id: generateId(),
-                    role: "assistant",
-                    content: "Lo siento, ha ocurrido un error al procesar tu mensaje. Por favor, inténtalo de nuevo.",
-                },
-            ])
+            alert("Ha ocurrido un error al procesar tu solicitud. Por favor, inténtalo de nuevo.")
         } finally {
             setIsLoading(false)
         }
     }
 
+    // Función para obtener la siguiente respuesta
+    const getNextResponse = async () => {
+        if (isLoading) return
+
+        setIsLoading(true)
+
+        try {
+            const response = await fetch("/api/lisa", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    name: userName,
+                    text: userThought,
+                }),
+            })
+
+            if (!response.ok) {
+                throw new Error("Error al procesar la solicitud")
+            }
+
+            const data = (await response.json()) as ResponseData
+            setResponses((prev) => [...prev, data])
+            setCurrentResponseIndex((prev) => prev + 1)
+        } catch (error) {
+            console.error("Error:", error)
+            alert("Ha ocurrido un error al obtener la siguiente respuesta. Por favor, inténtalo de nuevo.")
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    // Función para ir a la respuesta anterior
+    const goToPreviousResponse = () => {
+        if (currentResponseIndex > 0) {
+            setCurrentResponseIndex((prev) => prev - 1)
+        }
+    }
+
+    // Obtener la respuesta actual
+    const currentResponse = responses[currentResponseIndex]
 
     return (
         <div className="relative min-h-screen overflow-hidden bg-white">
@@ -155,20 +120,17 @@ export default function Home() {
             </header>
             <main className="bg-cover bg-center min-h-screen">
                 <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-secondary-50 to-pink-50 p-4">
-                    {!chatStarted ? (
+                    {!formSubmitted ? (
                         <div className="bg-white rounded-lg shadow-lg w-full max-w-md text-center p-6">
-                            <h1 className="text-2xl font-bold text-secondary-800 mb-4">Asistente Virtual</h1>
+                            <h1 className="text-2xl font-bold text-secondary-800 mb-4">¿Qué estás pensando hoy?</h1>
                             <div className="flex justify-center mb-4">
                                 <div className="bg-secondary-100 p-6 rounded-full">
                                     <MessageCircle size={48} className="text-secondary-600" />
                                 </div>
                             </div>
-                            <p className="text-gray-600 mb-6">
-                                ¡Hola! Estoy aquí para ayudarte a aprender un nuevo idioma. Por favor, introduce tu nombre y selecciona
-                                el idioma que deseas aprender.
-                            </p>
+                            <p className="text-gray-600 mb-6">Cuéntanos qué te interesa o te apetece comentar hoy.</p>
 
-                            <div className="space-y-4 mb-6">
+                            <form onSubmit={submitThought} className="space-y-4 mb-6">
                                 <div className="text-left">
                                     <Label htmlFor="name" className="text-sm font-medium">
                                         Tu nombre
@@ -179,120 +141,85 @@ export default function Home() {
                                         onChange={(e) => setUserName(e.target.value)}
                                         placeholder="Introduce tu nombre"
                                         className="mt-1"
+                                        required
                                     />
                                 </div>
 
                                 <div className="text-left">
-                                    <Label htmlFor="language" className="text-sm font-medium">
-                                        Idioma que quieres aprender
+                                    <Label htmlFor="thought" className="text-sm font-medium">
+                                        ¿Qué estás pensando hoy? ¿Qué te interesa o te apetece comentar?
                                     </Label>
-                                    <Select value={learningLanguage} onValueChange={setLearningLanguage}>
-                                        <SelectTrigger id="language" className="mt-1">
-                                            <SelectValue placeholder="Selecciona un idioma" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="english">Inglés</SelectItem>
-                                            <SelectItem value="french">Francés</SelectItem>
-                                            <SelectItem value="german">Alemán</SelectItem>
-                                            <SelectItem value="italian">Italiano</SelectItem>
-                                            <SelectItem value="portuguese">Portugués</SelectItem>
-                                            <SelectItem value="chinese">Chino</SelectItem>
-                                            <SelectItem value="japanese">Japonés</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    <Textarea
+                                        id="thought"
+                                        value={userThought}
+                                        onChange={(e) => setUserThought(e.target.value)}
+                                        placeholder="Comparte tus pensamientos..."
+                                        className="mt-1 min-h-[120px]"
+                                        required
+                                    />
                                 </div>
-                            </div>
 
-                            <Button
-                                onClick={startChat}
-                                disabled={!userName.trim() || !learningLanguage}
-                                className="w-full bg-secondary-600 hover:bg-secondary-700 text-white px-8 py-4 rounded-full text-lg transition-all duration-300 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                Comenzar Conversación
-                            </Button>
+                                <Button
+                                    type="submit"
+                                    disabled={!userName.trim() || !userThought.trim() || isLoading}
+                                    className="w-full bg-secondary-600 hover:bg-secondary-700 text-white px-8 py-4 rounded-full text-lg transition-all duration-300 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isLoading ? "Procesando..." : "Enviar"}
+                                </Button>
+                            </form>
                         </div>
                     ) : (
-                        <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl h-[80vh] flex flex-col">
-                            <div className="bg-secondary-600 text-white p-4 rounded-t-lg flex items-center gap-2">
-                                <MessageCircle size={20} />
-                                <h1 className="font-bold">Asistente Virtual</h1>
-                                <div className="ml-auto flex items-center gap-2 bg-secondary-700 px-3 py-1 rounded-full text-sm">
-                                    <Globe size={16} />
-                                    <span>{learningLanguage.charAt(0).toUpperCase() + learningLanguage.slice(1)}</span>
-                                </div>
-                            </div>
-
-                            <div className="flex-grow overflow-auto p-4 space-y-4">
-                                {messages.length === 0 ? (
-                                    <div className="h-full flex items-center justify-center text-gray-400 text-center">
-                                        <div>
-                                            <MessageCircle size={40} className="mx-auto mb-2 text-secondary-300" />
-                                            <p>Iniciando conversación...</p>
+                        <div className="w-full max-w-2xl">
+                            {currentResponse && (
+                                <Card className="shadow-lg">
+                                    <CardHeader>
+                                        <CardTitle className="text-xl text-secondary-800">Hola, {userName}</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-6">
+                                        <div className="bg-secondary-50 p-4 rounded-lg">
+                                            <p className="text-lg font-medium text-secondary-800">{currentResponse.large}</p>
                                         </div>
-                                    </div>
-                                ) : (
-                                    messages.map((message) => (
-                                        <div
-                                            key={message.id}
-                                            className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            {currentResponse.shorts.map((short, index) => (
+                                                <div key={index} className="bg-gray-50 p-3 rounded-md border border-gray-200">
+                                                    <p className="text-gray-700">{short}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </CardContent>
+                                    <CardFooter className="flex justify-between">
+                                        <Button
+                                            variant="outline"
+                                            onClick={goToPreviousResponse}
+                                            disabled={currentResponseIndex === 0}
+                                            className="flex items-center gap-2"
                                         >
-                                            <div
-                                                className={`max-w-[80%] rounded-lg p-3 ${
-                                                    message.role === "user"
-                                                        ? "bg-secondary-600 text-white rounded-tr-none"
-                                                        : "bg-gray-100 text-gray-800 rounded-tl-none"
-                                                }`}
-                                            >
-                                                {message.content}
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                                {isLoading && (
-                                    <div className="flex justify-start">
-                                        <div className="bg-gray-100 text-gray-800 rounded-lg rounded-tl-none max-w-[80%] p-3">
-                                            <div className="flex space-x-1">
-                                                <div
-                                                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                                                    style={{ animationDelay: "0ms" }}
-                                                ></div>
-                                                <div
-                                                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                                                    style={{ animationDelay: "150ms" }}
-                                                ></div>
-                                                <div
-                                                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                                                    style={{ animationDelay: "300ms" }}
-                                                ></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                                <div ref={messagesEndRef} />
-                            </div>
+                                            <ArrowLeft size={16} />
+                                            Anterior
+                                        </Button>
 
-                            <div className="border-t p-3">
-                                <form onSubmit={sendMessage} className="flex w-full gap-2">
-                                    <input
-                                        type="text"
-                                        value={input}
-                                        onChange={(e) => setInput(e.target.value)}
-                                        placeholder="Escribe tu mensaje aquí..."
-                                        className="flex-grow p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary-600"
-                                        disabled={isLoading}
-                                    />
-                                    <button
-                                        type="submit"
-                                        className={`p-2 rounded-md ${
-                                            isLoading || !input.trim()
-                                                ? "bg-gray-300 cursor-not-allowed"
-                                                : "bg-secondary-600 hover:bg-secondary-700 text-white"
-                                        }`}
-                                        disabled={isLoading || !input.trim()}
-                                    >
-                                        <Send size={18} />
-                                    </button>
-                                </form>
+                                        <div className="text-sm text-gray-500">
+                                            {currentResponseIndex + 1} de {responses.length}
+                                        </div>
+
+                                        <Button
+                                            onClick={getNextResponse}
+                                            disabled={isLoading}
+                                            className="bg-secondary-600 hover:bg-secondary-700 text-white flex items-center gap-2"
+                                        >
+                                            {isLoading ? "Cargando..." : "Siguiente"}
+                                            {!isLoading && <ArrowRight size={16} />}
+                                        </Button>
+                                    </CardFooter>
+                                </Card>
+                            )}
+
+                            <div className="mt-4 text-center">
+                                <p className="text-gray-500 mb-2">Tu pensamiento:</p>
+                                <div className="bg-white p-3 rounded-md border border-gray-200 text-left">
+                                    <p className="text-gray-700">{userThought}</p>
+                                </div>
                             </div>
                         </div>
                     )}
