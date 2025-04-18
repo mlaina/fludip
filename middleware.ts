@@ -1,60 +1,56 @@
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 import { NextResponse } from 'next/server'
 
-const publicRoutes = ['/', '/legal', '/s/', '/api/webhook', '/api/lisa', '/image', '/validation', '/auth/callback', '/auth/confirm', '/preview/*', '/my-story/*']
+const publicRoutes = [
+  '/', '/legal', '/s/', '/api/webhook', '/api/lisa',
+  '/image', '/validation', '/auth/callback', '/auth/confirm',
+  '/preview/*', '/my-story/*'
+]
 
-// Rutas permitidas para usuarios con plan WAITING
-const waitingAllowedRoutes = ['/coming-soon', '/story-view/']
 
-export async function middleware (req: { nextUrl: { pathname: string; searchParams: { has: (arg0: string) => any } }; url: string | URL | undefined; headers: { get: (arg0: string) => string } }) {
+export async function middleware(req) {
   let res = NextResponse.next()
+  const { pathname, searchParams } = req.nextUrl
 
-  if (req.nextUrl.pathname.startsWith('/images')) {
-    return res
-  }
+  // 1️⃣ 👉 **Salir lo antes posible si la ruta es pública**
+  const isPublicRoute = publicRoutes.some(route =>
+      route.endsWith('/*')
+          ? pathname.startsWith(route.slice(0, -2))
+          : route === pathname
+  )
+  if (isPublicRoute) return res
 
-  // Si se detecta el parámetro _cf_chl_tk, forzar redirección con status 303 y eliminar header duplicado.
-  if (req.nextUrl.searchParams.has('_cf_chl_tk')) {
+  // 2️⃣ Servir imágenes directamente
+  if (pathname.startsWith('/images')) return res
+
+  // 3️⃣ Ignorar peticiones de Cloudflare Challenge
+  if (searchParams.has('_cf_chl_tk')) {
     res = NextResponse.redirect(new URL('/', req.url), { status: 303 })
     res.headers.delete('x-middleware-set-cookie')
     return res
   }
 
-  if (req.nextUrl.pathname.startsWith('/auth/callback')) {
-    return res // Permitir el flujo de autenticación sin interrupciones
-  }
+  // 4️⃣ Permitir el callback de auth sin interrupciones
+  if (pathname.startsWith('/auth/callback')) return res
 
-  // Inicializa Supabase en el middleware
+  // 5️⃣ ⚙️ Inicializar Supabase e inspeccionar sesión
   const supabase = createMiddlewareClient({ req, res })
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) {
-    if (req.nextUrl.pathname !== '/') {
-      res = NextResponse.redirect(new URL('/', req.url), { status: 303 })
-      res.headers.delete('x-middleware-set-cookie')
-      return res
-    }
+  // 6️⃣ Redirigir a Home si no hay sesión (excepto Home mismo)
+  if (!user && pathname !== '/') {
+    res = NextResponse.redirect(new URL('/', req.url), { status: 303 })
+    res.headers.delete('x-middleware-set-cookie')
     return res
   }
 
-  // Verifica si la ruta es pública
-  const isPublicRoute = publicRoutes.some((route) => {
-    if (route.endsWith('/*')) {
-      const baseRoute = route.slice(0, -2)
-      return req.nextUrl.pathname.startsWith(baseRoute)
-    }
-    return route === req.nextUrl.pathname
-  })
-
-  if (user && req.nextUrl.pathname === '/success') {
+  // 7️⃣ Permitir /success y /api/* para usuarios logueados
+  if (user && (pathname === '/success' || pathname.startsWith('/api/'))) {
     return res
   }
 
-  if (user && req.nextUrl.pathname.startsWith('/api/')) {
-    return res
-  }
+  // 8️⃣ [Opcional] lógica extra para `waitingAllowedRoutes`
+  // ...
 
   return res
 }

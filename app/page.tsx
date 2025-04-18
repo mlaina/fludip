@@ -138,7 +138,7 @@ export default function Home() {
             setIsLoading(false)
         }
     }
-    
+
 
     return (
         <div className="relative min-h-screen overflow-hidden bg-white">

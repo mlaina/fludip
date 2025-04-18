@@ -6,11 +6,11 @@ const openai = new OpenAI({
 })
 
 export async function POST(request: Request) {
-  const { name, lng_target } = await request.json()
+  const { name, lng_target, lng_source = 'es' } = await request.json()
 
   try {
     const chatCompletion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: 'gpt-4.1',
       messages: [
         {
           role: 'system',
